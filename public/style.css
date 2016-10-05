@@ -1,0 +1,19 @@
+html, body {
+    min-height: 100%;
+}
+body {
+    box-sizing: border-box;
+    background-color: palegoldenrod;
+}
+
+button.btn {
+    height: auto;
+}
+
+.align-center {
+    text-align: center;
+}
+
+.mt10 {
+    margin-top: 10px;
+}
