@@ -7,7 +7,7 @@ var twilio = require("twilio/lib");
 var router = express.Router();
 
 var sendMail = function (userCase) {
-    var senderEmail = "kmdc106@gmail.com";
+    var senderEmail = "i140tracker@gmail.com";
     var sg = require('sendgrid')("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");
     var emailReq = sg.emptyRequest({
         method: 'POST',
@@ -55,11 +55,12 @@ var sendSMS = function (phone, msg) {
     });
 };
 
-var startCron = function(userCase) {
+var startCron = function (userCase) {
     var CronJob = require('cron').CronJob;
     console.log("starting cron for case: " + userCase.receipt);
-    var job = new CronJob('* * * * *', function() {
+    var job = new CronJob('0 */5 * * *', function () {
             console.log("Checking Status for " + userCase.receipt);
+            getStatus(userCase.receipt);
         }, function () {
             /* This function is executed when the job stops */
             console.log("Status check for " + userCase.receipt);
@@ -70,12 +71,14 @@ var startCron = function(userCase) {
     job.start();
 };
 
-var getStatus = function(receipt, res) {
+var getStatus = function (receipt, res) {
     var receipt = receipt;
     var statusUrl = 'https://egov.uscis.gov/casestatus/mycasestatus.do';
-    var statusPostJson = {form: {
-        appReceiptNum: receipt
-    }};
+    var statusPostJson = {
+        form: {
+            appReceiptNum: receipt
+        }
+    };
 
     request.post(
         statusUrl,
@@ -94,28 +97,34 @@ var getStatus = function(receipt, res) {
                     }
                 }, {new: false}, function (err, doc) {
                     if (err) {
-                        res.send(err);
-                    }
-
-                    if (doc.statusTitle !== statusTitle || doc.statusBody !== statusBody) {
-                        console.log("Status has changed. Sending notification");
-                        if (doc.phone) {
-                            sendSMS(doc.phone, statusBody || "some status");
-                        } else if (doc.email) {
-                            sendMail(doc);
+                        if (res) {
+                            res.send(err);
                         }
                     } else {
-                        console.log("No status change.");
+                        if (doc.statusTitle !== statusTitle || doc.statusBody !== statusBody) {
+                            console.log("Status has changed. Sending notification");
+                            if (doc.phone) {
+                                sendSMS(doc.phone, statusBody || "some status");
+                            } else if (doc.email) {
+                                sendMail(doc);
+                            }
+                        } else {
+                            console.log("No status change.");
+                        }
+
+                        var newUserCase = doc;
+                        newUserCase.statusTitle = statusTitle;
+                        newUserCase.statusBody = statusBody;
+
+                        if (res) {
+                            res.json({userCase: newUserCase});
+                        }
                     }
-
-                    var newUserCase = doc;
-                    newUserCase.statusTitle = statusTitle;
-                    newUserCase.statusBody = statusBody;
-
-                    res.json({userCase: newUserCase});
                 });
             } else {
-                res.send(err);
+                if (res) {
+                    res.send(err);
+                }
             }
         }
     );
@@ -151,7 +160,7 @@ router.route('/usercase/create').post(function (req, res) {
         if (err) {
             res.send(err);
         }
-        if(newUserCase.phone || newUserCase.email) {
+        if (newUserCase.phone || newUserCase.email) {
             startCron(newUserCase);
         }
 
@@ -161,7 +170,7 @@ router.route('/usercase/create').post(function (req, res) {
 
 router.route('/startcron').post(function (req, res) {
     UserCase.findOne({receipt: req.body.receipt}, function (err, doc) {
-        if(doc) {
+        if (doc) {
             startCron(doc);
         }
     });
