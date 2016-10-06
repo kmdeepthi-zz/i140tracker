@@ -16,6 +16,8 @@ var dbURI =
     process.env.MONGOHQ_URL ||
     'mongodb://localhost/HelloMongoose140';
 
+console.log("Printing all process env: ", process.env);
+
 mongoose.connect(dbURI, function (err, res) {
     if (err) {
         console.log ('ERROR connecting to: ' + dbURI + '. ' + err);
