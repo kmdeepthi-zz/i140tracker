@@ -10,8 +10,20 @@ var port = process.env.PORT || 3000;
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-var dbURI = 'mongodb://localhost/ConnectionTest140';
-mongoose.connect(dbURI);
+
+var dbURI =
+    process.env.MONGOLAB_URI ||
+    process.env.MONGOHQ_URL ||
+    'mongodb://localhost/HelloMongoose140';
+
+mongoose.connect(dbURI, function (err, res) {
+    if (err) {
+        console.log ('ERROR connecting to: ' + dbURI + '. ' + err);
+    } else {
+        console.log ('Succeeded connected to: ' + dbURI);
+    }
+});
+
 mongoose.connection.on('connected', function () {
     console.log('Mongoose default connection open to ' + dbURI);
 });
