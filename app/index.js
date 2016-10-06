@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 
 
 var dbURI =
-    process.env.MONGOLAB_URI ||
+    process.env.MONGODB_URI ||
     process.env.MONGOHQ_URL ||
     'mongodb://localhost/HelloMongoose140';
 
