@@ -70,19 +70,12 @@ var startCron = function(userCase) {
     job.start();
 };
 
-router.use(function (req, res, next) {
-    console.log('Calling the api');
-    next();
-});
-
-router.route('/status').post(function (req, res) {
-    //var receiptNum = 'LIN1623150153';
-    var receipt = req.body.receipt;
+var getStatus = function(receipt, res) {
+    var receipt = receipt;
     var statusUrl = 'https://egov.uscis.gov/casestatus/mycasestatus.do';
-    var statusPostJson = {
-        appReceiptNum: receipt,
-        initCaseSearch: "CHECK STATUS"
-    };
+    var statusPostJson = {form: {
+        appReceiptNum: receipt
+    }};
 
     request.post(
         statusUrl,
@@ -92,6 +85,7 @@ router.route('/status').post(function (req, res) {
                 var $ = cheerio.load(html);
                 var statusTitle = $(".appointment-sec .rows h1").text();
                 var statusBody = $(".appointment-sec .rows p").text();
+
 
                 UserCase.findOneAndUpdate({receipt: receipt}, {
                     $set: {
@@ -114,13 +108,27 @@ router.route('/status').post(function (req, res) {
                         console.log("No status change.");
                     }
 
-                    res.json({status: {title: statusTitle, body: statusBody}});
+                    var newUserCase = doc;
+                    newUserCase.statusTitle = statusTitle;
+                    newUserCase.statusBody = statusBody;
+
+                    res.json({userCase: newUserCase});
                 });
             } else {
                 res.send(err);
             }
         }
     );
+};
+
+router.use(function (req, res, next) {
+    console.log('Calling the api');
+    next();
+});
+
+router.route('/status').post(function (req, res) {
+    //var receiptNum = 'LIN1623150153';
+    getStatus(req.body.receipt, res)
 });
 
 router.route('/usercase/create').post(function (req, res) {
@@ -137,6 +145,7 @@ router.route('/usercase/create').post(function (req, res) {
         userCase.email = req.body.email;
     }
 
+
     // save the user
     userCase.save(function (err, newUserCase) {
         if (err) {
@@ -145,7 +154,8 @@ router.route('/usercase/create').post(function (req, res) {
         if(newUserCase.phone || newUserCase.email) {
             startCron(newUserCase);
         }
-        res.json({message: 'User Case created.', userCase: newUserCase});
+
+        getStatus(req.body.receipt, res);
     });
 });
 

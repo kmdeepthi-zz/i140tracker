@@ -3,7 +3,40 @@ html, body {
 }
 body {
     box-sizing: border-box;
-    background-color: palegoldenrod;
+    /*background-color: palegoldenrod;*/
+}
+
+.current-status {
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.current-status .info-text {
+    font-style: italic;
+    margin-top: 25px;
+    background: palegoldenrod;
+    padding: 0 10px 0 10px;
+}
+
+.current-status .status-body {
+    background-color: whitesmoke;
+    padding: 20px;
+}
+
+.current-status .title {
+    font-size: large;
+}
+
+.notify-block #email, .notify-block #phone {
+    display: inline-block;
+}
+
+.notify-block #email {
+    width: 50%;
+}
+
+.notify-block #phone {
+    width: 30%;
 }
 
 button.btn {

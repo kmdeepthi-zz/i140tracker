@@ -24,10 +24,11 @@
             <!--<button class="form-control btn btn-info mt10">GO</button>-->
         </div>
         <div class="notify-block form-group">
-            <input id="email" type="email" placeholder="Email to receive notifications" class="form-control mt10"/>
-            <input id= "phone" type="phone" placeholder="Phone to receive notifications" class="form-control mt10"/>
-            <button type="button" class="form-control btn btn-info btn-lg mt10" id="notifyBtn" data-toggle="modal">Get Notified</button>
+            <input id="email" type="email" placeholder="Email Id" class="form-control mt10"/>
+            <span>and/or</span>
+            <input id= "phone" type="phone" placeholder="Phone Number" class="form-control mt10"/>
         </div>
+        <button type="button" class="form-control btn btn-info btn-lg mt10" id="notifyBtn" data-toggle="modal">Get Notified</button>
 
         <!-- Modal -->
         <div id="userCaseCreated" class="modal fade" role="dialog">
@@ -51,8 +52,11 @@
         </div>
 
         <div class="current-status hidden">
-            <div class="title"></div>
-            <div class="desc"></div>
+            <div class="info-text">Your current status, we will keep checking every 5 hours and notify you when there is a change.</div>
+            <div class="status-body">
+                <div class="title align-center"></div>
+                <div class="desc mt10"></div>
+            </div>
         </div>
     </div>
 </div>
