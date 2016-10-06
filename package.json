@@ -23,7 +23,7 @@
     "cheerio": "latest",
     "cron": "^1.1.0",
     "express": "latest",
-    "mongoose": "~3.6.13",
+    "mongoose": "latest",
     "path": "^0.12.7",
     "request": "latest",
     "sendgrid": "^4.5.0",
