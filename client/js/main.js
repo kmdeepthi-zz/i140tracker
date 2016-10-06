@@ -1,3 +1,7 @@
+require('expose?$!expose?jQuery!jquery');
+require("bootstrap-webpack");
+require('../styles/main.less');
+
 $(function() {
     $("#notifyBtn").click(function() {
         var receipt = $("#receipt").val(),
