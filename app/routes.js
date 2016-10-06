@@ -6,9 +6,13 @@ var twilio = require("twilio/lib");
 
 var router = express.Router();
 
-var sendMail = function (userCase) {
+var sendMail = function (userCase, welcomeMail) {
     var senderEmail = "i140tracker@gmail.com";
     var sg = require('sendgrid')("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");
+
+    var subject = welcomeMail ? "I-140 status notification registration" : ('Status change for your case: ' + userCase.receipt);
+    var bodyContent = (welcomeMail ? "We will be carefully monitoring USCIS website every 5 hours and send you an email if anything changes. Check your current status here: " : "Check the new status here: ") + "https://egov.uscis.gov/casestatus/mycasestatus.do?appReceiptNum=" + userCase.receipt;
+
     var emailReq = sg.emptyRequest({
         method: 'POST',
         path: '/v3/mail/send',
@@ -17,14 +21,14 @@ var sendMail = function (userCase) {
                 to: [{
                     email: userCase.email
                 }],
-                subject: 'Status change for your case: ' + userCase.receipt
+                subject: subject
             }],
             from: {
                 email: senderEmail
             },
             content: [{
                 type: 'text/plain',
-                value: "Check the new status here: https://egov.uscis.gov/casestatus/mycasestatus.do?appReceiptNum=" + userCase.receipt
+                value: bodyContent
             }]
         }
     });
@@ -71,7 +75,7 @@ var startCron = function (userCase) {
     job.start();
 };
 
-var getStatus = function (receipt, res) {
+var getStatus = function (receipt, res, isCreate) {
     var receipt = receipt;
     var statusUrl = 'https://egov.uscis.gov/casestatus/mycasestatus.do';
     var statusPostJson = {
@@ -101,22 +105,27 @@ var getStatus = function (receipt, res) {
                             res.send(err);
                         }
                     } else {
-                        if (doc.statusTitle !== statusTitle || doc.statusBody !== statusBody) {
-                            console.log("Status has changed. Sending notification");
+                        if (isCreate && (doc.phone || doc.email)) {
+                            console.log("New user case. Sending welcome email");
+                            sendMail(doc, true);
+                            startCron(doc);
+                        } else if (doc.statusTitle !== statusTitle || doc.statusBody !== statusBody) {
+                            console.log("Status has changed.");
                             if (doc.phone) {
+                                console.log("Sending SMS");
                                 sendSMS(doc.phone, statusBody || "some status");
                             } else if (doc.email) {
-                                sendMail(doc);
+                                console.log("Sending email");
+                                sendMail(doc, false);
                             }
                         } else {
                             console.log("No status change.");
                         }
 
-                        var newUserCase = doc;
-                        newUserCase.statusTitle = statusTitle;
-                        newUserCase.statusBody = statusBody;
-
                         if (res) {
+                            var newUserCase = doc;
+                            newUserCase.statusTitle = statusTitle;
+                            newUserCase.statusBody = statusBody;
                             res.json({userCase: newUserCase});
                         }
                     }
@@ -160,11 +169,8 @@ router.route('/usercase/create').post(function (req, res) {
         if (err) {
             res.send(err);
         }
-        if (newUserCase.phone || newUserCase.email) {
-            startCron(newUserCase);
-        }
 
-        getStatus(req.body.receipt, res);
+        getStatus(req.body.receipt, res, true);
     });
 });
 
